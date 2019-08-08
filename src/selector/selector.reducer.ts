@@ -3,14 +3,20 @@ import {
     SelectorStateReducer,
     defaultSelectorStateReducer,
 } from './selector.model'
-import { AChangeSelector, CHANGE_SELECTOR } from './selector.actions'
+import {
+    AChangeSelectorAccepted,
+    CHANGE_SELECTOR_ACCEPTED,
+} from './selector.actions'
 
-export const selector: Reducer<SelectorStateReducer, AChangeSelector> = (
+export const selector: Reducer<
+    SelectorStateReducer,
+    AChangeSelectorAccepted
+> = (
     state: SelectorStateReducer = defaultSelectorStateReducer,
-    action: AChangeSelector
+    action: AChangeSelectorAccepted
 ): SelectorStateReducer => {
     switch (action.type) {
-        case CHANGE_SELECTOR: {
+        case CHANGE_SELECTOR_ACCEPTED: {
             return { selector: action.selector }
         }
 
