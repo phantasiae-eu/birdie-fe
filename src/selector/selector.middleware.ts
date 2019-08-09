@@ -9,6 +9,8 @@ import {
 } from './selector.actions'
 import axios, { AxiosResponse } from 'axios'
 import { Row, DataElement } from './selector.model'
+import { TableData } from '../table/table.model'
+import { tableDataAccepted, ATableDataAccepted } from '../table/table.actions'
 
 export const selectorMiddleware: Middleware<{}, AppState> = (
     store
@@ -25,7 +27,10 @@ export const selectorMiddleware: Middleware<{}, AppState> = (
             try {
                 await axios(
                     `http://localhost:3001/census?field=${action.selector}`
-                ).then((res: AxiosResponse): [AChangeSelectorAccepted] => {
+                ).then((res: AxiosResponse): [
+                    AChangeSelectorAccepted,
+                    ATableDataAccepted
+                ] => {
                     let rows: Row[] = []
                     let totNonDisplayed = 0
                     let nonDisplayedCategories: string[] = []
@@ -80,15 +85,20 @@ export const selectorMiddleware: Middleware<{}, AppState> = (
                     })
                     const nonDisplayedCategoriesnumb: number =
                         nonDisplayedCategories.length
-                    console.log('rows: ', rows)
-                    console.log('totNonDisplayed: ', totNonDisplayed)
-                    console.log(
-                        'nonDisplayedCategoriesnumb: ',
-                        nonDisplayedCategoriesnumb
-                    )
+                    const tableData: TableData = {
+                        rows: rows.map(
+                            (item: Row): Row => ({
+                                ...item,
+                                averageAge: Math.round(item.averageAge),
+                            })
+                        ),
+                        totNonDisplayed,
+                        nonDisplayedCategoriesnumb,
+                    }
 
                     return [
                         store.dispatch(changeSelectorAccepted(action.selector)),
+                        store.dispatch(tableDataAccepted(tableData)),
                     ]
                 })
             } catch (err) {
