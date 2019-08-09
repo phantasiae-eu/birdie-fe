@@ -8,6 +8,7 @@ import {
     AChangeSelectorAccepted,
 } from './selector.actions'
 import axios, { AxiosResponse } from 'axios'
+import { Row, DataElement } from './selector.model'
 
 export const selectorMiddleware: Middleware<{}, AppState> = (
     store
@@ -25,36 +26,66 @@ export const selectorMiddleware: Middleware<{}, AppState> = (
                 await axios(
                     `http://localhost:3001/census?field=${action.selector}`
                 ).then((res: AxiosResponse): [AChangeSelectorAccepted] => {
-                    let rows: any[] = []
+                    let rows: Row[] = []
                     let totNonDisplayed = 0
-                    let nonDisplayedCategories = 0
-                    res.data.forEach((element: any) => {
-                        if (rows.length === 100) {
-                            totNonDisplayed++
-                        } else {
-                            rows.push({
-                                category:
+                    let nonDisplayedCategories: string[] = []
+                    res.data.forEach((element: DataElement): void => {
+                        if (
+                            rows.some(
+                                (item: Row): boolean =>
+                                    item.category ===
                                     element[
                                         action.selector.replace(/%20/g, ' ')
-                                    ],
+                                    ]
+                            )
+                        ) {
+                            let itemToUpdate: Row | undefined = rows.find(
+                                (item: Row): boolean =>
+                                    item.category ===
+                                    element[
+                                        action.selector.replace(/%20/g, ' ')
+                                    ]
+                            )
+                            if (itemToUpdate) {
+                                itemToUpdate.count++
+                                itemToUpdate.averageAge =
+                                    itemToUpdate.averageAge +
+                                    (element.age - itemToUpdate.averageAge) /
+                                        itemToUpdate.count
+                            }
+                        } else if (rows.length < 100) {
+                            rows.push({
                                 count: 1,
                                 averageAge: element.age,
+                                category: element[
+                                    action.selector.replace(/%20/g, ' ')
+                                ] as string,
                             })
+                        } else {
+                            totNonDisplayed++
+                            if (
+                                !nonDisplayedCategories.some(
+                                    (item: string): boolean =>
+                                        item ===
+                                        element[
+                                            action.selector.replace(/%20/g, ' ')
+                                        ]
+                                )
+                            ) {
+                                nonDisplayedCategories.push(element[
+                                    action.selector.replace(/%20/g, ' ')
+                                ] as string)
+                            }
                         }
                     })
-                    console.log(res.data)
-                    console.log(rows)
+                    const nonDisplayedCategoriesnumb: number =
+                        nonDisplayedCategories.length
+                    console.log('rows: ', rows)
                     console.log('totNonDisplayed: ', totNonDisplayed)
-                    // {
-                    // rows:[{
-                    //   category: string
-                    //   count: number
-                    //   averageAge: number
-                    // }]
-                    // beyond 100 categories
-                    // totNonDisplayed: number
-                    // nonDisplayedCategories: number
-                    // }
+                    console.log(
+                        'nonDisplayedCategoriesnumb: ',
+                        nonDisplayedCategoriesnumb
+                    )
 
                     return [
                         store.dispatch(changeSelectorAccepted(action.selector)),

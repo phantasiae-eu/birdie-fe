@@ -45,24 +45,44 @@ export enum DbColumns {
     salaryRange = 'salary%20range',
 }
 
-export const DbItems: any[] = Object.keys(DbColumns).map((key: any) => ({
-    key,
-    value: DbColumns[key],
-}))
+export interface DbItem {
+    key: string
+    value: string
+}
+
+const keys = <O extends object>(obj: O): (keyof O)[] =>
+    Object.keys(obj) as (keyof O)[]
+
+export const DbItems: DbItem[] = keys(DbColumns).map(
+    (key): DbItem => ({
+        key,
+        value: DbColumns[key],
+    })
+)
 
 export interface SelectorStateReducer {
-    selector: DbColumns
+    selector: DbColumns | undefined
 }
 
 export const defaultSelectorStateReducer: SelectorStateReducer = {
-    selector: DbColumns.classOfWorker,
+    selector: undefined,
 }
 
 export interface SelectorStateProps {
-    selector: DbColumns
+    selector: DbColumns | undefined
 }
 
 export interface SelectorDispatchProps {
     changeSelector: (selector: DbColumns) => AChangeSelector
     dispatch: Dispatch
+}
+
+export interface Row {
+    category: string
+    count: number
+    averageAge: number
+}
+export interface DataElement {
+    age: number
+    [key: string]: number | string
 }
